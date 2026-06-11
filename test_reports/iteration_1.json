@@ -1,0 +1,47 @@
+{
+  "summary": "Full backend + e2e UI testing of Stripe integration for Nyara Stays booking flow. All 11 backend pytest cases pass (publishable-key, intent creation 30% deposit math, multi-currency variants, invalid-input 400s, status endpoint). Frontend e2e via Playwright successfully completed the 7-step booking flow: picked Yume → 3 nights July 2026 → guests → details → Stripe Payment Element mounted inside iframe (deposit $461, total $1,536 displayed correctly) → filled 4242 test card → 'Pay & confirm' authorised → step 7 confirmation shown with booking_ref NYR-D9Q4E.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "UI booking -> FastAPI payment_transactions tracking",
+        "issue": "booking_ref NYR-D9Q4E produced by the UI flow against https://luxury-lodging-6.preview.emergentagent.com/booking.html was NOT found in MongoDB payment_transactions, while direct curl calls to /api/booking/create-payment-intent on the same host DO write to MongoDB correctly (e.g. NYR-9465A was persisted with status=failed/pending). Strong evidence the preview URL routes the static booking.html's /api/booking/* fetches to a Cloudflare Worker (referenced in payments.py line 9 'Same pricing table mirrored in _worker.js for production') instead of the FastAPI backend, so the user's 'track 70% balance due' requirement via payment_transactions is effectively bypassed for real UI traffic in this environment.",
+        "affected_selectors": ["[data-confirm-ref]"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_payments.py",
+    "/app/test_reports/pytest/payments_results.xml"
+  ],
+  "action_items": [
+    "Decide on canonical payment backend for the preview/production URL: either (a) point booking.html /api/booking/* at the FastAPI backend so payment_transactions tracking + balance-due logic is authoritative, or (b) replicate the create-payment-intent + payment-status persistence inside _worker.js writing to the same DB. Today the UI flow does not update payment_transactions to 'succeeded'.",
+    "Consider adding a Stripe webhook (payment_intent.succeeded) to make payment_status updates resilient regardless of whether the client calls /payment-status afterwards.",
+    "Confirm DB_NAME used by the production runtime matches the FastAPI DB_NAME=test_database used by the unit tests."
+  ],
+  "critical_code_review_comments": [
+    "payments.py mixes server-side total computation with metadata serialisation safely, but exception handler imports stripe.error.StripeError — newer stripe-python (>=8) deprecates that path in favour of stripe.StripeError; verify installed version still exposes stripe.error.StripeError or wrap to stripe.StripeError.",
+    "server.py exposes app.state.db before include_router; ordering is fine but the import of payments_router is inside the file body — consider hoisting to top to keep imports together.",
+    "30% deposit constant DEPOSIT_PCT is duplicated between FastAPI (payments.py) and the Cloudflare worker — single source of truth would prevent drift.",
+    "FX rates hardcoded; for production add a daily refresh or note staleness.",
+    "create-payment-intent doesn't validate that check_in is in the future — a guest could create an intent for past dates."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_payments.py"
+  ],
+  "success_rate": {
+    "backend": "100% (11/11 pytest)",
+    "frontend": "100% (e2e booking + Stripe confirm succeeded; tracking integration flagged)"
+  },
+  "test_credentials": "Stripe test card 4242 4242 4242 4242, exp 12/29, CVC 123, ZIP 12345 (per request).",
+  "seed_data_creation": "None beyond TEST_ prefixed payment intents (left in Stripe test mode).",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend FastAPI payments router is solid. The integration gap is between the static booking.html (served via the preview URL) and the FastAPI backend — confirm whether the preview environment serves /api via FastAPI or a CF Worker. Quick check: hit /api/booking/publishable-key and /api/booking/create-payment-intent directly with curl, capture the booking_ref, then look it up in MongoDB payment_transactions. Compare with a booking_ref produced by the UI — if UI refs aren't in the DB, routing diverges.",
+  "rca of the issue": "Reproduction: 1) Load /booking.html in preview. 2) Complete 7-step flow with test card. 3) Confirmation shows NYR-XXXXX. 4) Mongo query db.payment_transactions.find({_id:'NYR-XXXXX'}) returns null. Meanwhile direct curl to the SAME host's /api/booking/create-payment-intent DOES persist. Likely root cause: edge/CDN routing rule sends /api/booking/* to a Cloudflare Worker for the static site, bypassing FastAPI. Mitigation: either align routing to FastAPI or persist transactions inside the Worker as well + add Stripe webhook."
+}

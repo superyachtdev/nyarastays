@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="robots" content="noindex,nofollow,noarchive,nosnippet" />
+<title>Nyara · Image Admin</title>
+<style>
+  :root {
+    --bg: #0e1410;
+    --panel: #131c17;
+    --panel-2: #19241d;
+    --line: #233028;
+    --ink: #e7ecdf;
+    --muted: #8a9b8e;
+    --brand: #c8a96a;
+    --brand-soft: #c8a96a22;
+    --ok: #6fbf73;
+    --err: #d96b5b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 ui-sans-serif, system-ui, "Inter", sans-serif; }
+  header { padding: 28px 32px 12px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: baseline; gap: 24px; flex-wrap: wrap; }
+  header h1 { margin: 0; font: 600 22px/1.2 "Cormorant Garamond", "Times New Roman", serif; letter-spacing: 0.02em; }
+  header .sub { color: var(--muted); font-size: 13px; }
+  header .pill { background: var(--brand-soft); color: var(--brand); padding: 4px 10px; border-radius: 999px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
+  main { padding: 22px 32px 80px; max-width: 1100px; }
+  .toolbar { display: flex; gap: 12px; align-items: center; margin: 10px 0 24px; flex-wrap: wrap; }
+  .toolbar input[type=search] {
+    background: var(--panel); border: 1px solid var(--line); color: var(--ink);
+    padding: 9px 12px; border-radius: 8px; min-width: 280px; font: inherit;
+  }
+  .btn {
+    background: var(--brand); color: #1a130a; border: 0; padding: 9px 14px;
+    border-radius: 8px; cursor: pointer; font: 600 13px/1 inherit; letter-spacing: 0.02em;
+  }
+  .btn.secondary { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+  .btn.danger { background: transparent; color: var(--err); border: 1px solid var(--err); }
+  .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+  .toast {
+    position: fixed; right: 24px; bottom: 24px;
+    background: var(--panel-2); border: 1px solid var(--line); padding: 10px 14px;
+    border-radius: 10px; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,.5);
+    transform: translateY(20px); opacity: 0; transition: all .25s ease;
+    max-width: 380px;
+  }
+  .toast.show { transform: none; opacity: 1; }
+  .toast.ok { border-color: var(--ok); }
+  .toast.err { border-color: var(--err); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    overflow: hidden; display: flex; flex-direction: column;
+  }
+  .card .thumb {
+    aspect-ratio: 4 / 3; background: #000 center/cover no-repeat; position: relative;
+  }
+  .card .thumb .badge {
+    position: absolute; top: 8px; left: 8px;
+    background: rgba(0,0,0,.55); color: #fff; backdrop-filter: blur(6px);
+    font-size: 11px; padding: 4px 8px; border-radius: 999px; letter-spacing: 0.04em;
+  }
+  .card .body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .card .path { font: 12px/1.4 ui-monospace, Menlo, Consolas, monospace; color: var(--muted); word-break: break-all; }
+  .card .locs { font-size: 12px; color: var(--muted); }
+  .card .locs b { color: var(--ink); font-weight: 500; }
+  .card .row { display: flex; gap: 8px; }
+  .card .row .btn { flex: 1; }
+  .card .status {
+    margin-top: 2px; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .card .status.live { color: var(--ok); }
+  .card .status.orig { color: var(--muted); }
+  input[type=file] { display: none; }
+  footer { padding: 16px 32px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Nyara · Image Admin</h1>
+    <div class="sub" data-testid="admin-subtitle">Replace any image on the live site. Drop a file or click upload.</div>
+  </div>
+  <span class="pill" data-testid="admin-pill">Private link</span>
+</header>
+
+<main>
+  <div class="toolbar">
+    <input type="search" data-testid="admin-search" placeholder="Filter by filename, page, or section…" />
+    <button class="btn secondary" data-testid="admin-reset-all">Reset all to originals</button>
+    <span style="flex:1"></span>
+    <span class="sub" data-testid="admin-count">— images</span>
+  </div>
+
+  <div class="grid" data-testid="admin-grid" id="grid"></div>
+</main>
+
+<footer>
+  Public manifest is served at <code>/api/image-manifest</code> · Uploads go to R2 bucket <code>IMAGES_BUCKET</code> ·
+  Rotate <code>ADMIN_TOKEN</code> in Cloudflare Pages env vars to revoke this link.
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  // The Worker only serves this page if the token in the URL matches ADMIN_TOKEN,
+  // so we can safely lift the token from the path and use it for API calls.
+  const m = location.pathname.match(/^\/__admin\/([A-Za-z0-9]+)\/?$/);
+  if (!m) { document.body.innerHTML = '<p style="padding:32px;color:#d96b5b">Invalid admin URL.</p>'; return; }
+  const TOKEN = m[1];
+  const API = '/__admin/' + TOKEN + '/api';
+
+  // Catalogue is generated server-side by the worker (so a single source of truth).
+  // It's injected here at admin-load time.
+  const catalog = window.__NYARA_CATALOG__ || [];
+  const grid = document.getElementById('grid');
+  const toastEl = document.getElementById('toast');
+  let manifest = {};
+
+  function toast(msg, type){
+    toastEl.textContent = msg;
+    toastEl.className = 'toast show ' + (type || '');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function(){ toastEl.className = 'toast ' + (type || ''); }, 3200);
+  }
+
+  function publicUrlFor(path){
+    return manifest[path] || path;
+  }
+
+  function render(){
+    const q = (document.querySelector('[data-testid="admin-search"]').value || '').toLowerCase();
+    grid.innerHTML = '';
+    let shown = 0;
+    catalog.forEach(function(item){
+      const hay = (item.path + ' ' + item.locations.join(' ')).toLowerCase();
+      if (q && hay.indexOf(q) === -1) return;
+      shown++;
+      const isOverridden = !!manifest[item.path];
+      const url = publicUrlFor(item.path);
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.setAttribute('data-testid', 'image-card-' + item.path);
+      card.innerHTML =
+        '<div class="thumb" style="background-image:url(\'' + url + '?t=' + Date.now() + '\')">' +
+          '<span class="badge">' + item.locations.length + ' usage' + (item.locations.length===1?'':'s') + '</span>' +
+        '</div>' +
+        '<div class="body">' +
+          '<div class="status ' + (isOverridden ? 'live' : 'orig') + '">' +
+            (isOverridden ? '● Custom image live' : '○ Using original') + '</div>' +
+          '<div class="path">' + item.path + '</div>' +
+          '<div class="locs"><b>Appears on:</b> ' + item.locations.join(', ') + '</div>' +
+          '<div class="row">' +
+            '<button class="btn" data-act="upload" data-testid="upload-btn-' + item.path + '">Replace image</button>' +
+            (isOverridden
+              ? '<button class="btn danger" data-act="reset" data-testid="reset-btn-' + item.path + '">Revert</button>'
+              : '') +
+          '</div>' +
+        '</div>';
+      card.querySelector('[data-act=upload]').addEventListener('click', function(){ pickAndUpload(item.path); });
+      const r = card.querySelector('[data-act=reset]');
+      if (r) r.addEventListener('click', function(){ resetOne(item.path); });
+      grid.appendChild(card);
+    });
+    document.querySelector('[data-testid="admin-count"]').textContent = shown + ' / ' + catalog.length + ' images';
+  }
+
+  function pickAndUpload(path){
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/png,image/webp,image/avif';
+    input.addEventListener('change', function(){
+      const file = input.files && input.files[0];
+      if (!file) return;
+      if (file.size > 12 * 1024 * 1024) { toast('Max upload size is 12 MB', 'err'); return; }
+      uploadFor(path, file);
+    });
+    input.click();
+  }
+
+  function uploadFor(path, file){
+    toast('Uploading ' + file.name + '…');
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('path', path);
+    fetch(API + '/upload', { method: 'POST', body: fd })
+      .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
+      .then(function(res){
+        if (!res.ok) { toast('Upload failed: ' + (res.j.detail || 'unknown'), 'err'); return; }
+        manifest[path] = res.j.url;
+        toast('Live ✓ ' + path.split('/').pop(), 'ok');
+        render();
+      })
+      .catch(function(e){ toast('Upload error: ' + e.message, 'err'); });
+  }
+
+  function resetOne(path){
+    if (!confirm('Revert ' + path + ' back to the original image?')) return;
+    fetch(API + '/manifest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ unset: [path] }),
+    })
+      .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
+      .then(function(res){
+        if (!res.ok) { toast('Reset failed: ' + (res.j.detail || 'unknown'), 'err'); return; }
+        manifest = res.j.images || {};
+        toast('Reverted to original', 'ok');
+        render();
+      });
+  }
+
+  function resetAll(){
+    if (!confirm('Reset ALL images back to the originals? This cannot be undone.')) return;
+    fetch(API + '/manifest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clear: true }),
+    })
+      .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
+      .then(function(res){
+        if (!res.ok) { toast('Reset failed: ' + (res.j.detail || 'unknown'), 'err'); return; }
+        manifest = res.j.images || {};
+        toast('All images reverted to originals', 'ok');
+        render();
+      });
+  }
+
+  document.querySelector('[data-testid="admin-search"]').addEventListener('input', render);
+  document.querySelector('[data-testid="admin-reset-all"]').addEventListener('click', resetAll);
+
+  // Initial load: fetch the current manifest, then render.
+  fetch(API + '/manifest')
+    .then(function(r){ return r.ok ? r.json() : { images: {} }; })
+    .then(function(j){
+      manifest = (j && j.images) || {};
+      render();
+    })
+    .catch(function(){ render(); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Contact — Nyara</title>
+  <meta name="description" content="Write us. Quietly. We'll reply within a day." />
+  <link rel="icon" href="/assets/images/logo/nyara-logo.jpg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  <link rel="stylesheet" href="/assets/css/animations.css" />
+  <link rel="stylesheet" href="/assets/css/responsive.css" />
+  <link rel="stylesheet" href="/assets/css/elevate.css" />
+  <link rel="stylesheet" href="/assets/css/booking.css" />
+  <script src="/assets/js/manifest-swap.js" defer></script>
+</head>
+<body class="page-contact">
+
+  <header class="nav nav--solid" data-nav>
+    <a href="/index.html" class="nav__brand" aria-label="Nyara"><img src="/assets/images/logo/nyara-logo.jpg" alt="Nyara" class="nav__logo" /></a>
+    <nav class="nav__links" aria-label="Primary">
+      <a href="/index.html" class="nav__link">Home</a>
+      <a href="/locations.html" class="nav__link">Stays</a>
+      <a href="/journal.html" class="nav__link">Journal</a>
+      <a href="/contact.html" class="nav__link is-active">Contact</a>
+    </nav>
+    <a href="/booking.html" class="btn btn--ghost nav__cta">Reserve →</a>
+    <button class="nav__burger" data-burger aria-label="Menu" aria-expanded="false"><span></span><span></span></button>
+  </header>
+  <div class="mobile-drawer" data-drawer>
+    <a href="/index.html">Home</a><a href="/locations.html">Stays</a><a href="/journal.html">Journal</a><a href="/contact.html">Contact</a>
+    <a href="/booking.html" class="mobile-drawer__cta">Reserve →</a>
+  </div>
+
+  <section class="page-head page-head--narrow">
+    <div class="page-head__inner">
+      <span class="kicker reveal" data-reveal>Write to us</span>
+      <h1 class="page-head__title reveal" data-reveal data-reveal-delay="120">Tell us when, <em>and we'll tell you how.</em></h1>
+      <p class="page-head__sub reveal" data-reveal data-reveal-delay="240">For reservations, longer stays, private events or anything in between. We answer in a day.</p>
+    </div>
+  </section>
+
+  <!-- ===== CONTACT GRID ===== -->
+  <section class="contact-grid">
+    <div class="contact-grid__inner">
+
+      <div class="contact-side reveal" data-reveal>
+        <div class="contact-card">
+          <span class="kicker">Reservations</span>
+          <a href="mailto:stay@nyarastays.com" class="contact-card__line">stay@nyarastays.com</a>
+          <a href="tel:+66000000000" class="contact-card__line">+66 0 000 0000</a>
+        </div>
+        <div class="contact-card">
+          <span class="kicker">Visit us</span>
+          <p class="contact-card__line">Yume — Uluwatu, Bali</p>
+          <p class="contact-card__line">Nyara Villas — Rawai, Phuket</p>
+        </div>
+        <div class="contact-card">
+          <span class="kicker">Follow softly</span>
+          <a href="#" class="contact-card__line">Instagram · @nyarastays</a>
+          <a href="#" class="contact-card__line">WhatsApp · +66 0 000 0000</a>
+        </div>
+        <div class="contact-card contact-card--hours">
+          <span class="kicker">Hours</span>
+          <p class="contact-card__line">Daily · 09:00 – 20:00 ICT</p>
+          <p class="contact-card__line" style="color:var(--muted)">We reply within 24 hours.</p>
+        </div>
+      </div>
+
+      <form class="contact-form reveal" data-reveal data-reveal-delay="160" data-testid="contact-form" novalidate>
+        <h2 class="contact-form__title">A short note</h2>
+        <p class="contact-form__sub">Anything you'd like us to know, before we reply.</p>
+
+        <div class="field-grid">
+          <label class="field">
+            <input type="text" required data-testid="contact-name" />
+            <span class="field__label">Full name</span>
+          </label>
+          <label class="field">
+            <input type="email" required data-testid="contact-email" />
+            <span class="field__label">Email</span>
+          </label>
+        </div>
+
+        <label class="field">
+          <input type="text" data-testid="contact-subject" />
+          <span class="field__label">Subject (optional)</span>
+        </label>
+
+        <label class="field field--area">
+          <textarea rows="6" required data-testid="contact-message"></textarea>
+          <span class="field__label">Your message</span>
+        </label>
+
+        <div class="contact-form__foot">
+          <button type="submit" class="btn btn--primary btn--lg" data-testid="contact-submit">Send note</button>
+          <span class="contact-form__note">We use your details only to reply to your message.</span>
+        </div>
+
+        <div class="contact-form__success" data-contact-success hidden>
+          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="1.5" fill="none"><path d="M4 12.5 9 17.5 20 6.5"/></svg>
+          <span>Sent. We'll be back to you shortly.</span>
+        </div>
+      </form>
+
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="foot__top">
+      <div class="foot__brand"><span class="foot__mark">Nyara</span><p class="foot__tag">A small collection of homes across Bali and Phuket.</p></div>
+      <div class="foot__cols">
+        <div><h4>Stays</h4><a href="/locations/yume.html">Yume by Nyara</a><a href="/locations/nyara-villas.html">Nyara Villas</a></div>
+        <div><h4>Visit</h4><a href="/journal.html">Journal</a><a href="/contact.html">Contact</a><a href="/booking.html">Reserve</a></div>
+        <div><h4>Reach us</h4><a href="mailto:stay@nyarastays.com">stay@nyarastays.com</a><a href="tel:+66000000000">+66 0 000 0000</a><a href="#">Instagram</a></div>
+      </div>
+    </div>
+    <div class="foot__bottom"><span>© 2026 Nyara Stays</span><span>Phuket · Thailand</span><span>Made quietly.</span></div>
+  </footer>
+
+  <script src="/assets/js/main.js" defer></script>
+  <script src="/assets/js/animations.js" defer></script>
+  <script src="/assets/js/elevate.js" defer></script>
+  <script>
+    document.querySelector('[data-testid="contact-form"]').addEventListener('submit', e => {
+      e.preventDefault();
+      const f = e.currentTarget;
+      const name = f.querySelector('[data-testid="contact-name"]').value.trim();
+      const email = f.querySelector('[data-testid="contact-email"]').value.trim();
+      const msg = f.querySelector('[data-testid="contact-message"]').value.trim();
+      if (!name || !email || !msg) {
+        f.querySelectorAll('input[required], textarea[required]').forEach(el => {
+          if (!el.value.trim()) el.classList.add('is-error'); else el.classList.remove('is-error');
+        });
+        return;
+      }
+      const success = f.querySelector('[data-contact-success]');
+      success.hidden = false;
+      success.classList.add('is-in');
+      f.reset();
+      setTimeout(() => { success.hidden = true; success.classList.remove('is-in'); }, 6000);
+    });
+    document.querySelectorAll('.contact-form input, .contact-form textarea').forEach(el => {
+      el.addEventListener('input', () => el.classList.remove('is-error'));
+    });
+  </script>
+</body>
+</html>

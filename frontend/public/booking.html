@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Reserve a Stay — Nyara</title>
+  <meta name="description" content="A short reservation, gently handled." />
+  <link rel="icon" href="/assets/images/logo/nyara-logo.jpg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  <link rel="stylesheet" href="/assets/css/animations.css" />
+  <link rel="stylesheet" href="/assets/css/booking.css" />
+  <link rel="stylesheet" href="/assets/css/responsive.css" />
+  <link rel="stylesheet" href="/assets/css/elevate.css" />
+  <script src="https://js.stripe.com/v3/"></script>
+  <script src="/assets/js/manifest-swap.js" defer></script>
+</head>
+<body class="page-booking">
+
+  <header class="nav nav--solid" data-nav>
+    <a href="/index.html" class="nav__brand" aria-label="Nyara"><img src="/assets/images/logo/nyara-logo.jpg" alt="Nyara" class="nav__logo" /></a>
+    <nav class="nav__links" aria-label="Primary">
+      <a href="/index.html" class="nav__link">Home</a>
+      <a href="/locations.html" class="nav__link">Stays</a>
+      <a href="/journal.html" class="nav__link">Journal</a>
+      <a href="/contact.html" class="nav__link">Contact</a>
+    </nav>
+    <a href="/booking.html" class="btn btn--ghost nav__cta is-active">Reserve →</a>
+    <button class="nav__burger" data-burger aria-label="Menu" aria-expanded="false"><span></span><span></span></button>
+  </header>
+  <div class="mobile-drawer" data-drawer>
+    <a href="/index.html">Home</a><a href="/locations.html">Stays</a><a href="/journal.html">Journal</a><a href="/contact.html">Contact</a>
+    <a href="/booking.html" class="mobile-drawer__cta">Reserve →</a>
+  </div>
+
+  <main class="booking" data-booking>
+
+    <!-- ===== MEDIA LEFT ===== -->
+    <aside class="booking__media" data-booking-media>
+      <img src="/assets/images/yume/352682729.jpg" alt="" data-media-key="default" class="is-active" />
+      <img src="/assets/images/yume/352664100.jpg" alt="Yume by Nyara" data-media-key="yume" />
+      <img src="https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=1600&q=80" alt="Nyara Villas" data-media-key="nyara" />
+      <div class="booking__media-veil"></div>
+      <div class="booking__media-info">
+        <p class="kicker" data-media-step>Step 01 · The destination</p>
+        <h2 data-media-title>Choose where you'd like to stay.</h2>
+      </div>
+    </aside>
+
+    <!-- ===== PANEL RIGHT ===== -->
+    <section class="booking__panel">
+
+      <p class="progress__label">
+        <span data-progress-text>Step 01 of 07 · Destination</span>
+      </p>
+      <div class="progress" data-progress>
+        <div class="progress__step is-active"></div>
+        <div class="progress__step"></div>
+        <div class="progress__step"></div>
+        <div class="progress__step"></div>
+        <div class="progress__step"></div>
+        <div class="progress__step"></div>
+        <div class="progress__step"></div>
+      </div>
+
+      <div class="steps" data-steps>
+
+        <!-- STEP 1: DESTINATION -->
+        <section class="step is-active" data-step="0">
+          <header class="step__head">
+            <span class="kicker">01 — The destination</span>
+            <h2 class="step__title">Where shall you stay?</h2>
+            <p class="step__sub">Two homes. One in Uluwatu, Bali. One in Rawai, South Phuket.</p>
+          </header>
+
+          <div class="dest-grid">
+            <button type="button" class="dest" data-dest="yume" data-testid="dest-yume">
+              <div class="dest__media">
+                <img src="/assets/images/yume/352664100.jpg" alt="Yume" />
+                <div class="dest__check"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 12.5 9 17.5 20 6.5"/></svg></div>
+              </div>
+              <div class="dest__body">
+                <p class="dest__loc">Uluwatu · Bali</p>
+                <h3 class="dest__name">Yume by Nyara</h3>
+                <p class="dest__copy">3+ private villas on a clifftop site. Sleeps 2+ per villa. From USD 320/night.</p>
+              </div>
+            </button>
+
+            <button type="button" class="dest" data-dest="nyara" data-testid="dest-nyara">
+              <div class="dest__media">
+                <img src="https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=1600&q=80" alt="Nyara Villas" />
+                <div class="dest__check"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 12.5 9 17.5 20 6.5"/></svg></div>
+              </div>
+              <div class="dest__body">
+                <p class="dest__loc">Rawai · South Phuket</p>
+                <h3 class="dest__name">Nyara Villas</h3>
+                <p class="dest__copy">Two multi-level villas, sleeps 8+. From USD 680/night.</p>
+              </div>
+            </button>
+          </div>
+        </section>
+
+        <!-- STEP 2: DATES -->
+        <section class="step" data-step="1">
+          <header class="step__head">
+            <span class="kicker">02 — Your dates</span>
+            <h2 class="step__title">When would you arrive?</h2>
+            <p class="step__sub">Tap your arrival, then your departure.</p>
+          </header>
+
+          <div class="cal" data-cal>
+            <div class="cal__head">
+              <button type="button" class="cal__nav-prev" data-cal-prev aria-label="Previous month">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="1.5" fill="none"><path d="M15 6l-6 6 6 6"/></svg>
+              </button>
+              <h3 class="cal__month" data-cal-month>—</h3>
+              <button type="button" class="cal__nav-next" data-cal-next aria-label="Next month">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="1.5" fill="none"><path d="M9 6l6 6-6 6"/></svg>
+              </button>
+            </div>
+            <div class="cal__weekdays">
+              <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+            </div>
+            <div class="cal__grid" data-cal-grid></div>
+            <div class="cal__legend" aria-label="Pricing seasons">
+              <span><i class="l-low"></i>Low season</span>
+              <span><i class="l-mid"></i>Mid season</span>
+              <span><i class="l-high"></i>High season</span>
+            </div>
+            <div class="cal__readout">
+              <div><span class="kicker">Check in</span><strong data-cal-in>—</strong></div>
+              <div><span class="kicker">Check out</span><strong data-cal-out>—</strong></div>
+              <div class="nights"><span class="kicker">Nights</span><strong data-cal-nights>—</strong></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 3: GUESTS -->
+        <section class="step" data-step="2">
+          <header class="step__head">
+            <span class="kicker">03 — Your party</span>
+            <h2 class="step__title">Who's coming with you?</h2>
+            <p class="step__sub">We'll prepare the home and the welcome accordingly.</p>
+          </header>
+
+          <div class="guests">
+            <div class="guest-row" data-guest="adults">
+              <div><h4>Adults</h4><p>Ages 13 and above</p></div>
+              <div class="stepper">
+                <button type="button" data-step-dir="-1" aria-label="Decrease adults">−</button>
+                <span class="stepper__val" data-step-val>2</span>
+                <button type="button" data-step-dir="1" aria-label="Increase adults">+</button>
+              </div>
+            </div>
+            <div class="guest-row" data-guest="children">
+              <div><h4>Children</h4><p>Ages 2–12</p></div>
+              <div class="stepper">
+                <button type="button" data-step-dir="-1" aria-label="Decrease children">−</button>
+                <span class="stepper__val" data-step-val>0</span>
+                <button type="button" data-step-dir="1" aria-label="Increase children">+</button>
+              </div>
+            </div>
+            <div class="guest-row" data-guest="infants">
+              <div><h4>Infants</h4><p>Under 2</p></div>
+              <div class="stepper">
+                <button type="button" data-step-dir="-1" aria-label="Decrease infants">−</button>
+                <span class="stepper__val" data-step-val>0</span>
+                <button type="button" data-step-dir="1" aria-label="Increase infants">+</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 4: SUMMARY -->
+        <section class="step" data-step="3">
+          <header class="step__head">
+            <span class="kicker">04 — Stay summary</span>
+            <h2 class="step__title">Looks good?</h2>
+            <p class="step__sub">A quick look before we take your details.</p>
+          </header>
+
+          <div class="summary" data-summary>
+            <div class="summary__media"><img src="/assets/images/yume/352664100.jpg" alt="" data-sum-img /></div>
+            <div class="summary__body">
+              <p class="summary__loc" data-sum-loc>Uluwatu · Bali</p>
+              <h3 class="summary__name" data-sum-name>Yume by Nyara</h3>
+              <dl class="summary__rows">
+                <div class="summary__row"><dt>Arrival</dt><dd data-sum-in>—</dd></div>
+                <div class="summary__row"><dt>Departure</dt><dd data-sum-out>—</dd></div>
+                <div class="summary__row"><dt>Nights</dt><dd data-sum-nights>—</dd></div>
+                <div class="summary__row"><dt>Guests</dt><dd data-sum-guests>—</dd></div>
+              </dl>
+              <dl class="summary__total">
+                <dt>Estimated total</dt>
+                <dd data-sum-total>—</dd>
+              </dl>
+              <p class="summary__note">Excludes taxes &amp; service. Final pricing confirmed by our team.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 5: GUEST DETAILS -->
+        <section class="step" data-step="4">
+          <header class="step__head">
+            <span class="kicker">05 — Your details</span>
+            <h2 class="step__title">A few words about you.</h2>
+            <p class="step__sub">We use these only to confirm your stay.</p>
+          </header>
+
+          <form data-details>
+            <div class="field-grid">
+              <label class="field">
+                <input type="text" required data-testid="guest-name" />
+                <span class="field__label">Full name</span>
+              </label>
+              <label class="field">
+                <input type="email" required data-testid="guest-email" />
+                <span class="field__label">Email</span>
+              </label>
+            </div>
+            <label class="field">
+              <input type="tel" required data-testid="guest-phone" />
+              <span class="field__label">Phone number</span>
+            </label>
+            <label class="field field--area">
+              <textarea rows="4" data-testid="guest-requests"></textarea>
+              <span class="field__label">Special requests (optional)</span>
+            </label>
+          </form>
+        </section>
+
+        <!-- STEP 6: PAYMENT -->
+        <section class="step" data-step="5">
+          <header class="step__head">
+            <span class="kicker">06 — Payment</span>
+            <h2 class="step__title">A gentle hold, no surprises.</h2>
+            <p class="step__sub">We place a soft hold to confirm your stay. Final pricing is reviewed and emailed before any charge.</p>
+          </header>
+
+          <div class="pay">
+            <div class="pay__stripe-wrap">
+              <div class="pay__stripe-status" data-pay-status hidden></div>
+              <label class="field">
+                <input type="text" required data-testid="pay-cardname" autocomplete="cc-name" inputmode="text" data-pay-cardname placeholder=" " />
+                <span class="field__label">Cardholder name</span>
+              </label>
+              <div class="pay__element" data-stripe-element data-testid="stripe-payment-element">
+                <div class="pay__placeholder" data-pay-placeholder>
+                  <span class="pay__spinner" aria-hidden="true"></span>
+                  <span>Preparing secure payment…</span>
+                </div>
+              </div>
+              <p class="pay__secured">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.5" fill="none" aria-hidden="true">
+                  <rect x="4" y="10.5" width="16" height="10" rx="2"/>
+                  <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>
+                </svg>
+                <span>Secured by <strong>Stripe</strong> · your card details never touch our servers.</span>
+              </p>
+              <div class="pay__error" data-pay-error hidden></div>
+            </div>
+
+            <div class="pay__total">
+              <div>
+                <span class="kicker">Charged today (30% deposit)</span>
+                <strong data-pay-hold>—</strong>
+              </div>
+              <div class="pay__total-meta">
+                <span class="kicker">Stay total</span>
+                <span data-pay-total>—</span>
+              </div>
+            </div>
+
+            <p class="pay__note">
+              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="1.5" fill="none"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+              Remaining 70% is charged at check-in. Full refund up to 14 days before arrival.
+            </p>
+          </div>
+        </section>
+
+        <!-- STEP 7: CONFIRMATION -->
+        <section class="step" data-step="6">
+          <div class="confirm">
+            <div class="confirm__check">
+              <svg viewBox="0 0 24 24" width="40" height="40" stroke="currentColor" stroke-width="1.6" fill="none">
+                <path d="M4 12.5 9 17.5 20 6.5"/>
+              </svg>
+            </div>
+            <h2 class="confirm__title">Your stay <em>awaits.</em></h2>
+            <p class="confirm__sub">Our team will confirm your reservation shortly. A note is on its way to your inbox.</p>
+            <div class="confirm__ref">
+              <span class="kicker">Reservation reference</span>
+              <strong data-confirm-ref>NYR-—</strong>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- STEP NAV -->
+      <div class="step__nav">
+        <a href="#" class="btn btn--text" data-step-back data-testid="step-back" hidden>← Back</a>
+        <span></span>
+        <button type="button" class="btn btn--primary" data-step-next data-testid="step-next">Continue →</button>
+      </div>
+
+    </section>
+  </main>
+
+  <script src="/assets/js/main.js" defer></script>
+  <script src="/assets/js/animations.js" defer></script>
+  <script src="/assets/js/elevate.js" defer></script>
+  <script src="/assets/js/booking.js" defer></script>
+</body>
+</html>
