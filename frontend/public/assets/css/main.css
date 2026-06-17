@@ -348,10 +348,19 @@ em { font-style: italic; font-family: var(--f-display); font-weight: 400; }
 .stays__grid{
   padding: 20px clamp(20px, 5vw, 64px) clamp(80px, 14vh, 160px);
   max-width: 1500px; margin: 0 auto;
-  display: grid; grid-template-columns: 1fr 1fr; gap: clamp(24px, 4vw, 56px);
+  display: flex; gap: clamp(24px, 4vw, 56px);
+  overflow-x: auto; overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  scroll-padding-left: clamp(20px, 5vw, 64px);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+.stays__grid::-webkit-scrollbar{ display: none; }
 .stay-card{
   display: flex; flex-direction: column;
+  flex: 0 0 auto;
+  width: clamp(300px, 40vw, 560px);
+  scroll-snap-align: start;
 }
 .stay-card__media{
   position: relative; display:block; overflow: hidden;

@@ -4,7 +4,8 @@
    ====================================================================== */
 
 @media (max-width: 1100px){
-  .stays__grid{ grid-template-columns: 1fr; gap: 56px; }
+  .stays__grid{ gap: 28px; }
+  .stay-card{ width: 80vw; }
   .philosophy__grid{ grid-template-columns: 1fr; gap: 48px; }
   .foot__top{ grid-template-columns: 1fr; gap: 50px; }
   .foot__cols{ grid-template-columns: repeat(3, 1fr); }
