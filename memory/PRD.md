@@ -34,3 +34,8 @@ Cloned superyachtdev/nyarastays and added a 3rd stay to the collection.
 - 5 guest-supplied photos added to `frontend/public/assets/images/penthouse/`
 - Details (from Airbnb 43269389): Aldea Zama, Tulum, Mexico · 3BR · sleeps 9 · 2 private pools · BBQ · jungle views · placeholder USD 450/night
 - Registered the stay everywhere: `index.html` (stay card + footer + heading), `locations.html` (3rd property card + collection count), `booking.html` (media + destination grid), `assets/js/booking.js` STAYS, `_worker.js` STAYS + IMAGE_CATALOG, `backend/payments.py` STAYS + Literal type
+
+## Update — 2026-06-17 · Copy & UX polish
+- Homepage Stays section converted from 2-col grid to a horizontal scroll-snap row (third stay peeks to invite scroll).
+- Ambient soundscape: added synthesized meditation pad (A-minor drone, slow filter sweep) + occasional pentatonic singing-bowl tones behind the waves. Fixed auto-start so audio only starts (and shows "On") once AudioContext is truly running — scroll-triggered intent now arms next real gesture instead of showing a silent "On".
+- Collection copy updated site-wide to reflect 3 stays (Bali/Phuket/Tulum): index hero + meta/OG + N°03 hero counter, intro splash, locations meta + map strip + legend, about timeline/philosophy/meta. Property-specific "two pools/villas" wording intentionally kept.

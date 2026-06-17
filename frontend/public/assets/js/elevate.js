@@ -20,7 +20,7 @@
         <img src="/assets/images/logo/nyara-logo.jpg" alt="Nyara" />
       </div>
       <div class="intro__caption">
-        <span>Welcome</span><span>· Nyara Stays ·</span><span>Phuket · Bali</span>
+        <span>Welcome</span><span>· Nyara Stays ·</span><span>Bali · Phuket · Tulum</span>
       </div>`;
     document.body.appendChild(intro);
     // Prevent scroll briefly
