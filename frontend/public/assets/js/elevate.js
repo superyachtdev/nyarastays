@@ -384,59 +384,108 @@
       sources.push(rumble, wash, spray, washLfo, sprayLfo);
     }
 
-    function setLabel(){
+    let playing = false;
+    function reflect(){
       const lbl = btn.querySelector('.sound__label');
-      lbl.textContent = on ? 'Ambient · On' : 'Ambient · Off';
+      if (lbl) lbl.textContent = playing ? 'Ambient · On' : 'Ambient · Off';
+      btn.classList.toggle('is-on', playing);
     }
+    function setLabel(){ reflect(); }
 
     btn.addEventListener('click', () => {
       activate(!on);
     });
 
-    function activate(turnOn){
-      if (!ctx) buildAmbient();
-      if (ctx.state === 'suspended') ctx.resume();
-      on = !!turnOn;
-      btn.classList.toggle('is-on', on);
-      // fade master gain
+    // Plays the welcome wave + ramps everything up. Only ever called once
+    // the AudioContext is genuinely RUNNING, so "On" never shows while silent.
+    function startVoices(){
+      if (!ctx || !on) return;
+      playing = true;
+      reflect();
       const now = ctx.currentTime;
       master.gain.cancelScheduledValues(now);
       master.gain.setValueAtTime(master.gain.value, now);
-      master.gain.linearRampToValueAtTime(on ? 0.42 : 0, now + 1.4);
-      // crashing waves only play when ambient is on
-      if (on && ctx._scheduleBird) {
-        // Welcome wave ~0.4s after activation so the guest unmistakably hears it
-        const t = ctx.currentTime + 0.35;
-        const dur = 2.6;
-        const crash = ctx.createBufferSource();
-        // reuse the shared pink buffer attached to the master chain
-        const tmpBuf = ctx.createBuffer(1, ctx.sampleRate * 1, ctx.sampleRate);
-        const d = tmpBuf.getChannelData(0);
-        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-        crash.buffer = tmpBuf;
-        crash.loop = true;
-        const bp = ctx.createBiquadFilter();
-        bp.type = 'bandpass'; bp.Q.value = 0.7;
-        bp.frequency.setValueAtTime(220, t);
-        bp.frequency.exponentialRampToValueAtTime(1800, t + 0.5);
-        bp.frequency.exponentialRampToValueAtTime(800, t + dur);
-        const lp = ctx.createBiquadFilter();
-        lp.type = 'lowpass'; lp.frequency.value = 4000;
-        const g = ctx.createGain();
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(0.55, t + 0.4);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-        crash.connect(bp).connect(lp).connect(g).connect(master); // bypass limiter for clarity
-        crash.start(t);
-        crash.stop(t + dur + 0.05);
-        ctx._scheduleBird();
-        if (ctx._scheduleBowl) ctx._scheduleBowl();
-      } else if (birdTimer) {
-        clearTimeout(birdTimer);
-        birdTimer = null;
+      master.gain.linearRampToValueAtTime(0.42, now + 1.4);
+
+      // Welcome wave ~0.4s in so the guest unmistakably hears it
+      const t = ctx.currentTime + 0.35;
+      const dur = 2.6;
+      const crash = ctx.createBufferSource();
+      const tmpBuf = ctx.createBuffer(1, ctx.sampleRate * 1, ctx.sampleRate);
+      const d = tmpBuf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      crash.buffer = tmpBuf;
+      crash.loop = true;
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass'; bp.Q.value = 0.7;
+      bp.frequency.setValueAtTime(220, t);
+      bp.frequency.exponentialRampToValueAtTime(1800, t + 0.5);
+      bp.frequency.exponentialRampToValueAtTime(800, t + dur);
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass'; lp.frequency.value = 4000;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.55, t + 0.4);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      crash.connect(bp).connect(lp).connect(g).connect(master);
+      crash.start(t);
+      crash.stop(t + dur + 0.05);
+
+      // (Re)start the periodic scheduling cleanly
+      if (birdTimer){ clearTimeout(birdTimer); birdTimer = null; }
+      if (bowlTimer){ clearTimeout(bowlTimer); bowlTimer = null; }
+      if (ctx._scheduleBird) ctx._scheduleBird();
+      if (ctx._scheduleBowl) ctx._scheduleBowl();
+    }
+
+    // Browsers only resume audio on a REAL user gesture (click/tap/key) —
+    // a scroll does NOT count. If the intent was set by a scroll, wait for
+    // the next genuine gesture anywhere and start then, so the guest never
+    // has to toggle off/on to actually hear it.
+    let pendingArm = false;
+    function armGestureResume(){
+      if (pendingArm) return;
+      pendingArm = true;
+      const go = () => {
+        cleanup();
+        if (!on || !ctx) return;
+        ctx.resume().then(() => {
+          if (ctx.state === 'running') startVoices();
+          else armGestureResume();
+        }).catch(() => {});
+      };
+      function cleanup(){
+        pendingArm = false;
+        window.removeEventListener('pointerdown', go);
+        window.removeEventListener('touchstart', go);
+        window.removeEventListener('keydown', go);
+        window.removeEventListener('click', go);
+      }
+      window.addEventListener('pointerdown', go, { once: true, passive: true });
+      window.addEventListener('touchstart', go, { once: true, passive: true });
+      window.addEventListener('keydown', go, { once: true });
+      window.addEventListener('click', go, { once: true });
+    }
+
+    function activate(turnOn){
+      if (!ctx) buildAmbient();
+      on = !!turnOn;
+
+      if (on){
+        ctx.resume().then(() => {
+          if (ctx.state === 'running') startVoices();
+          else armGestureResume();      // suspended (e.g. scroll-triggered) → wait for real gesture
+        }).catch(() => armGestureResume());
+      } else {
+        playing = false;
+        reflect();
+        const now = ctx.currentTime;
+        master.gain.cancelScheduledValues(now);
+        master.gain.setValueAtTime(master.gain.value, now);
+        master.gain.linearRampToValueAtTime(0, now + 1.4);
+        if (birdTimer){ clearTimeout(birdTimer); birdTimer = null; }
         if (bowlTimer){ clearTimeout(bowlTimer); bowlTimer = null; }
       }
-      setLabel();
     }
 
     // Auto-start on the first user gesture (browsers block autoplay without one).
