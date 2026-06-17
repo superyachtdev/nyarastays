@@ -159,6 +159,7 @@
     let ctx, master, sources = [];
     let on = false;
     let birdTimer = null;
+    let bowlTimer = null;
 
     function buildAmbient(){
       ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -247,7 +248,92 @@
       spray.connect(sprayHP).connect(sprayGain).connect(limiter);
       spray.start();
 
-      // ---- 4. CRASHING WAVE EVENTS ------------------------------------
+      // ---- 5. MEDITATION PAD (warm, slow evolving chord) -------------
+      // A soft sustained drone — root, fifth, octave and a gentle minor
+      // third (A minor). Each voice is two slightly detuned sines for
+      // warmth, breathing on its own slow tremolo so the chord feels
+      // alive. Heavily low-passed so it sits *behind* the waves and
+      // softens their hiss rather than competing with it.
+      const padLP = ctx.createBiquadFilter();
+      padLP.type = 'lowpass';
+      padLP.frequency.value = 1100;
+      padLP.Q.value = 0.3;
+      const padGain = ctx.createGain();
+      padGain.gain.value = 0.5;
+      padLP.connect(padGain).connect(limiter);
+
+      // Very slow filter sweep so the pad gently opens and closes (~40s)
+      const padSweep = ctx.createOscillator();
+      const padSweepGain = ctx.createGain();
+      padSweep.frequency.value = 0.025;
+      padSweepGain.gain.value = 420;            // ±420Hz around 1100
+      padSweep.connect(padSweepGain).connect(padLP.frequency);
+      padSweep.start();
+
+      const padVoices = [110.00, 164.81, 220.00, 261.63]; // A2 · E3 · A3 · C4
+      const padLevels = [0.060, 0.045, 0.040, 0.030];
+      const padLfoRates = [0.045, 0.061, 0.053, 0.071];
+      padVoices.forEach((freq, i) => {
+        const vGain = ctx.createGain();
+        vGain.gain.value = padLevels[i];
+        // breathing tremolo, each voice slightly out of phase
+        const lfo = ctx.createOscillator();
+        const lfoGain = ctx.createGain();
+        lfo.frequency.value = padLfoRates[i];
+        lfoGain.gain.value = padLevels[i] * 0.6;
+        lfo.connect(lfoGain).connect(vGain.gain);
+        lfo.start();
+        // two detuned sines per voice = warmth
+        [-4, 4].forEach((cents) => {
+          const osc = ctx.createOscillator();
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          osc.detune.value = cents;
+          osc.connect(vGain);
+          osc.start();
+          sources.push(osc);
+        });
+        vGain.connect(padLP);
+        sources.push(lfo);
+      });
+      sources.push(padSweep);
+
+      // ---- 6. SINGING BOWLS (occasional soft meditative tones) -------
+      // Every so often a gentle bell/bowl note from an A-minor pentatonic
+      // scale rings out and decays slowly — the "music" over the drone.
+      const bowlScale = [220.00, 261.63, 293.66, 329.63, 392.00, 440.00]; // A C D E G A
+      function scheduleBowl(){
+        if (!on || !ctx) return;
+        const delay = 9 + Math.random() * 9;     // 9–18s between tones
+        bowlTimer = setTimeout(() => {
+          if (!on || !ctx) return;
+          const t = ctx.currentTime + 0.05;
+          const dur = 6.5 + Math.random() * 3.5;  // long, slow decay
+          const freq = bowlScale[Math.floor(Math.random() * bowlScale.length)];
+          const bg = ctx.createGain();
+          bg.gain.setValueAtTime(0.0001, t);
+          bg.gain.exponentialRampToValueAtTime(0.10, t + 0.6);
+          bg.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          const bLP = ctx.createBiquadFilter();
+          bLP.type = 'lowpass'; bLP.frequency.value = 2200;
+          bg.connect(bLP).connect(limiter);
+          // fundamental + a soft shimmering partial
+          [[freq, 1.0], [freq * 2.01, 0.28]].forEach(([f, lvl]) => {
+            const o = ctx.createOscillator();
+            o.type = 'sine';
+            o.frequency.value = f;
+            const og = ctx.createGain();
+            og.gain.value = lvl;
+            o.connect(og).connect(bg);
+            o.start(t);
+            o.stop(t + dur + 0.1);
+          });
+          scheduleBowl();
+        }, delay * 1000);
+      }
+      ctx._scheduleBowl = scheduleBowl;
+
+      // ---- 7. CRASHING WAVE EVENTS ------------------------------------
       // Periodic louder breakers. Each crash is a noise burst with a fast
       // rise, broad spectral sweep (low → mid as the wave rolls and
       // breaks), then a longer decay tail as the foam dissipates.
@@ -344,9 +430,11 @@
         crash.start(t);
         crash.stop(t + dur + 0.05);
         ctx._scheduleBird();
+        if (ctx._scheduleBowl) ctx._scheduleBowl();
       } else if (birdTimer) {
         clearTimeout(birdTimer);
         birdTimer = null;
+        if (bowlTimer){ clearTimeout(bowlTimer); bowlTimer = null; }
       }
       setLabel();
     }
