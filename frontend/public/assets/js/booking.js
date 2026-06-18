@@ -151,12 +151,38 @@
     btn.addEventListener('click', () => {
       state.stay = btn.dataset.dest;
       root.querySelectorAll('[data-dest]').forEach(b => b.classList.toggle('is-selected', b === btn));
+      loadAvailability();
     });
   });
   // Apply prefilled stay (URL param)
   if (state.stay){
     const sel = root.querySelector(`[data-dest="${state.stay}"]`);
     if (sel) sel.classList.add('is-selected');
+    loadAvailability();
+  }
+
+  // --- Availability (Airbnb iCal → blocked nights) --------------------
+  let blockedSet = new Set();
+  function dateKey(d){
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  function isBlocked(date){ return blockedSet.has(dateKey(date)); }
+  // True if any night between a (incl) and b (excl) is reserved
+  function rangeHasBlocked(a, b){
+    for (let t = startOfDay(a).getTime(); t < startOfDay(b).getTime(); t += 86400000){
+      if (blockedSet.has(dateKey(new Date(t)))) return true;
+    }
+    return false;
+  }
+  async function loadAvailability(){
+    const key = state.stay || 'penthouse';
+    try {
+      const r = await fetch('/api/availability/' + encodeURIComponent(key));
+      if (!r.ok) return;
+      const data = await r.json();
+      blockedSet = new Set(Array.isArray(data.blocked) ? data.blocked : []);
+      if (typeof renderCalendar === 'function') renderCalendar();
+    } catch (_e) { /* offline / not configured — leave the calendar fully open */ }
   }
 
   // --- Calendar -------------------------------------------------------
@@ -210,6 +236,7 @@
       else if ([4,5,8].includes(mon))    tier = 'mid';
       btn.classList.add(`is-tier-${tier}`);
       if (date < today) btn.classList.add('is-past');
+      if (isBlocked(date)) { btn.classList.add('is-blocked'); btn.title = 'Reserved'; }
       if (isSameDay(date, today)) btn.classList.add('is-today');
       if (isSameDay(date, state.checkIn))  btn.classList.add('is-start');
       if (isSameDay(date, state.checkOut)) btn.classList.add('is-end');
@@ -239,9 +266,13 @@
   function pickDay(date){
     const today = startOfDay(new Date());
     if (date < today) return;
+    if (isBlocked(date)) return;                       // can't start/end on a reserved night
     if (!state.checkIn || (state.checkIn && state.checkOut)){
       state.checkIn = date; state.checkOut = null;
     } else if (date <= state.checkIn){
+      state.checkIn = date; state.checkOut = null;
+    } else if (rangeHasBlocked(state.checkIn, date)){
+      // A reserved night sits inside the chosen range — restart from this date
       state.checkIn = date; state.checkOut = null;
     } else {
       state.checkOut = date;
